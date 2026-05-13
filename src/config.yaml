@@ -1,0 +1,17 @@
+telegram:
+  bot_token: "8275013221:AAFTdjLj7udqYZ67_OCFpT_W80hl-E6Fp28"
+
+search:
+  max_slugs: 3         # Số phim tối đa khi tìm kiếm
+  timeout: 10          # Timeout khi gọi API (giây)
+
+donate:
+  qr_image_path: "assets/qr.png"   # Đường dẫn tới ảnh QR của bạn
+  bank_name: "MB Bank"                 # Tên ngân hàng
+  account_number: "2220190280802"             # Số tài khoản
+  account_name: "DAO TUONG VINH"             # Tên chủ tài khoản
+  message: "Cảm ơn bạn đã ủng hộ Bot Xem Phim! ❤️"  # Lời nhắn
+
+history:
+  file_path: "data/history.json"  # File lưu lịch sử
+  max_per_user: 50                # Số lượt tìm tối đa lưu cho mỗi người

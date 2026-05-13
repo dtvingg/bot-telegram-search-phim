@@ -1,0 +1,10 @@
+version: "3.9"
+
+services:
+  telegram-bot:
+    build: .
+    container_name: telegram_bot
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    working_dir: /app
