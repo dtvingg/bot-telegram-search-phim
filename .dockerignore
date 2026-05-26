@@ -28,6 +28,9 @@ Dockerfile
 docker-compose.yml
 .dockerignore
 
+# Secrets (không bake vào image)
+.env
+
 # Docs
 *.md
 README*

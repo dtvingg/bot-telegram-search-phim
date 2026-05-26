@@ -1,5 +1,5 @@
 telegram:
-  bot_token: "8275013221:AAFTdjLj7udqYZ67_OCFpT_W80hl-E6Fp28"
+  bot_token: ""  # Để trống — dùng biến môi trường BOT_TOKEN
 
 search:
   max_slugs: 3         # Số phim tối đa khi tìm kiếm

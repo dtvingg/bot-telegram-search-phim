@@ -1,4 +1,8 @@
+import logging
+
 import requests
+
+logger = logging.getLogger(__name__)
 
 
 class ServiceSearchPhim:
@@ -12,7 +16,7 @@ class ServiceSearchPhim:
 
     def search(self, query: str) -> list[dict]:
         """Tìm kiếm phim, trả về list metadata cơ bản."""
-        print(f"Searching for: {query}")
+        logger.info("Searching for: %s", query)
         url = f"{self.base_url}/{self.prefix_search}"
 
         try:
@@ -29,19 +33,18 @@ class ServiceSearchPhim:
                 return [{"slug": m.get("slug")} for m in items]
 
         except requests.RequestException as e:
-            print("Search error:", e)
+            logger.error("Search error: %s", e)
 
         return []
 
     def get_detail(self, slug: str) -> dict | None:
         """Lấy toàn bộ thông tin chi tiết phim từ API."""
-        print(f"Getting detail for: {slug}")
+        logger.info("Getting detail for: %s", slug)
         url = f"{self.base_url}/{self.prefix_detail}/{slug}"
 
         try:
             response = requests.get(url, headers=self.headers, timeout=self.timeout)
             data = response.json()
-            print("data", data)
 
             if data.get("status") == "success":
                 item = data.get("data", {}).get("item", {})
@@ -66,64 +69,56 @@ class ServiceSearchPhim:
                             })
 
                 return {
-                    # Định danh
-                    "slug":          item.get("slug"),
-                    "name":          item.get("name", slug),
-                    "origin_name":   item.get("origin_name", ""),
-                    # Thông tin phim
-                    "year":          item.get("year"),
-                    "quality":       item.get("quality", ""),
-                    "lang":          item.get("lang", ""),
-                    "time":          item.get("time", ""),
-                    "type":          item.get("type", ""),
-                    "status":        item.get("status", ""),
+                    "slug":            item.get("slug"),
+                    "name":            item.get("name", slug),
+                    "origin_name":     item.get("origin_name", ""),
+                    "year":            item.get("year"),
+                    "quality":         item.get("quality", ""),
+                    "lang":            item.get("lang", ""),
+                    "time":            item.get("time", ""),
+                    "type":            item.get("type", ""),
+                    "status":          item.get("status", ""),
                     "episode_current": item.get("episode_current", ""),
-                    "episode_total": item.get("episode_total", ""),
-                    "view":          item.get("view", 0),
-                    # Đánh giá
-                    "rating":        round(rating, 1) if rating else None,
-                    "imdb_id":       imdb.get("id"),
-                    # Cast & Crew
-                    "actors":        item.get("actor", []),
-                    "directors":     item.get("director", []),
-                    # Phân loại
-                    "categories":    [c.get("name") for c in item.get("category", [])],
-                    "countries":     [c.get("name") for c in item.get("country", [])],
-                    # Nội dung
-                    "description":   item.get("content", ""),
-                    # Link xem
-                    "episodes":      episodes,
+                    "episode_total":   item.get("episode_total", ""),
+                    "view":            item.get("view", 0),
+                    "rating":          round(rating, 1) if rating else None,
+                    "imdb_id":         imdb.get("id"),
+                    "actors":          item.get("actor", []),
+                    "directors":       item.get("director", []),
+                    "categories":      [c.get("name") for c in item.get("category", [])],
+                    "countries":       [c.get("name") for c in item.get("country", [])],
+                    "description":     item.get("content", ""),
+                    "episodes":        episodes,
                 }
 
         except requests.RequestException as e:
-            print("Detail error:", e)
+            logger.error("Detail error: %s", e)
 
         return None
 
     # Thứ tự ưu tiên chất lượng (index càng nhỏ = ưu tiên càng cao)
     QUALITY_RANK = {
-        "4k":       0,
-        "2k":       1,
-        "fhd":      2,
-        "full hd":  2,
-        "hd":       3,
-        "sd":       4,
-        "cam":      5,
+        "4k":      0,
+        "2k":      1,
+        "fhd":     2,
+        "full hd": 2,
+        "hd":      3,
+        "sd":      4,
+        "cam":     5,
     }
 
     def _quality_rank(self, movie: dict) -> int:
-        """Trả về số thứ tự ưu tiên của chất lượng (nhỏ hơn = tốt hơn)."""
         raw = (movie.get("quality") or "").lower().strip()
         for key, rank in self.QUALITY_RANK.items():
             if key in raw:
                 return rank
-        return 99  # Không xác định → xếp cuối
+        return 99
 
-    def run(self, query: str) -> list[dict] | None:
+    def run(self, query: str) -> list[dict]:
         """Tìm kiếm + lấy chi tiết, trả về list phim sắp xếp chất lượng cao trước."""
         movies = self.search(query)
         if not movies:
-            return None
+            return []
 
         results = []
         for movie in movies[:self.max_slugs]:
@@ -131,9 +126,5 @@ class ServiceSearchPhim:
             if detail:
                 results.append(detail)
 
-        if not results:
-            return None
-
-        # Sắp xếp: chất lượng cao lên trước, cùng chất lượng thì rating cao hơn lên trước
         results.sort(key=lambda m: (self._quality_rank(m), -(m.get("rating") or 0)))
         return results
